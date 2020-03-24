@@ -1,0 +1,73 @@
+        -:    0:Source:bitarray.h
+        -:    1:/** TODO
+        -:    2: * 
+        -:    3: * dynamic memory 
+        -:    4: * 
+        -:    5: */
+        -:    6:
+        -:    7:#include <cassert>
+        -:    8:
+        -:    9:const int DEFAULT_SIZE = 1; 
+        -:   10:typedef unsigned int data_type;
+        -:   11:typedef unsigned int size_type;
+        -:   12:const size_type NBITS = 8 * sizeof(data_type);
+        -:   13:
+        -:   14:
+        -:   15:class biterator;
+        -:   16:
+        -:   17:class bit_array
+        -:   18:{
+        -:   19:public:
+        -:   20:    bit_array();
+        -:   21:    bit_array(size_type sz);
+        -:   22:    ~bit_array();
+        -:   23:
+        2:   24:    size_type size() { return _size; };
+        -:   25:
+        -:   26:    void set(size_type idx, bool value);
+        -:   27:    bool check(size_type idx);
+        -:   28:    
+        -:   29:    int firstset(unsigned int idx);
+        -:   30:    int firstclear(unsigned int idx);
+        -:   31:
+        -:   32:    int resize(size_type size);
+        -:   33:
+        -:   34:    typedef biterator iterator;
+        -:   35:    
+        -:   36:    biterator begin();
+        -:   37:    biterator end();    
+        -:   38:
+        -:   39:private:
+        -:   40:    data_type* _data;
+        -:   41:    size_type _size;
+        -:   42:    size_type nbyte;
+        -:   43:
+        -:   44:};
+        -:   45:
+        -:   46:class biterator
+        -:   47:{
+        -:   48:    friend class bit_array;
+        -:   49:
+        -:   50:private:
+        -:   51:    
+      163:   52:    biterator(bit_array* bitarrptr, size_type current_val):
+        -:   53:        bitarr(bitarrptr), 
+      163:   54:        current(current_val)
+      163:   55:    {};
+        -:   56:
+        -:   57:public:
+        -:   58:    biterator(const biterator& iter):
+        -:   59:        bitarr(iter.bitarr),
+        -:   60:        current(iter.current)
+        -:   61:    {};
+        -:   62:
+        -:   63:    bool operator!=(const biterator & other) const;    
+        -:   64:    biterator& operator++();
+        -:   65:
+        -:   66:    bool check() const;
+        -:   67:    void set(bool val);
+        -:   68:
+        -:   69:private:
+        -:   70:    size_type current;
+        -:   71:    bit_array* bitarr;
+        -:   72:};

@@ -1,0 +1,195 @@
+        -:    0:Source:bitarray.cpp
+        -:    1:#include <bitarray.h>
+        -:    2:#include <iostream>
+        -:    3:#include <stdlib.h>
+        -:    4:#include <cassert>
+        -:    5:#include <strings.h>
+        -:    6:#include <stdio.h>
+        -:    7:#include <cstdlib>
+        -:    8:#include <ctime>
+        -:    9:#include <exception>
+        -:   10:
+        -:   11:/**
+        -:   12: * написать обертку под malloc, который выдаёт иногда ошибки ok
+        -:   13: * 
+        -:   14: * firstset() с произвольного места ok
+        -:   15: */
+        -:   16:
+        3:   17:data_type* mynew(int sz)
+        -:   18:{
+        -:   19:#ifdef _DEBUG
+        3:   20:    std::srand(time(0));
+        3:   21:    int x = std::rand() % 4;
+        3:   22:    if (x == 0){
+        1:   23:        throw std::bad_alloc();
+        -:   24:    }
+        -:   25:    else
+        -:   26:#endif
+       8*:   27:    return new data_type[sz]{};
+        -:   28:}
+        -:   29:
+        1:   30:bit_array::bit_array():
+        1:   31:    _data(mynew(DEFAULT_SIZE)),
+        -:   32:    _size(DEFAULT_SIZE * NBITS),
+        1:   33:    nbyte(DEFAULT_SIZE)
+        1:   34:{}
+        -:   35:
+        2:   36:bit_array::bit_array(size_type sz):
+        2:   37:    _data(mynew(sz)),
+        1:   38:    _size(sz * NBITS),
+        1:   39:    nbyte(sz)
+        1:   40:{}
+        -:   41:
+        4:   42:bit_array::~bit_array()
+        -:   43:{
+        2:   44:    if (_data != nullptr)
+        1:   45:        delete[] _data;
+        -:   46:
+        2:   47:    _data = nullptr;
+        2:   48:    _size = nbyte = -1;
+        2:   49:}
+        -:   50:
+      163:   51:void bit_array::set(size_type idx, bool value)
+        -:   52:{
+     163*:   53:    assert(idx < _size);
+        -:   54:
+      163:   55:    data_type x = 1 << (idx % NBITS);
+        -:   56:
+      163:   57:    if (value)
+      162:   58:        _data[idx / NBITS] |= x;
+        -:   59:    else
+        1:   60:        _data[idx / NBITS] &= ~x;
+      163:   61:}
+        -:   62:
+        4:   63:bool bit_array::check(size_type idx)
+        -:   64:{
+       4*:   65:    assert(idx < _size);
+        -:   66:
+        4:   67:    data_type x = 1 << (idx % NBITS);
+        -:   68:    
+        4:   69:    if (_data[idx / NBITS] & x)
+        2:   70:        return 1;
+        -:   71:    else 
+        2:   72:        return 0;
+        -:   73:}
+        -:   74:
+        3:   75:int bit_array::firstset(unsigned int place)
+        -:   76:{
+       3*:   77:    assert(place < _size);
+        -:   78:
+        -:   79:    //first byte to search
+        3:   80:    size_type byteplace = place / NBITS;
+        3:   81:    size_type shift = place % NBITS;
+        -:   82:
+        -:   83:    //prepare the first byte
+        3:   84:    data_type start_byte = _data[byteplace];
+        3:   85:    start_byte &= (0xFFFFFFFF >> shift) << shift; 
+        -:   86:
+        -:   87:    //check the first byte
+        3:   88:    size_type idx = ffs(start_byte);
+        3:   89:    if (idx)
+        1:   90:        return idx - 1 + byteplace * NBITS;
+        -:   91:
+        -:   92:    //if not found search further
+        2:   93:    idx = byteplace + 1;
+        7:   94:    while (idx < nbyte && !(_data[idx]))
+        5:   95:        idx++;    
+        -:   96:    
+        2:   97:    if (idx == nbyte)
+        1:   98:        return -1;                                          
+        -:   99:    else
+        -:  100:    {     
+        1:  101:        return ffs(_data[idx]) - 1 + idx * NBITS;        
+        -:  102:    }
+        -:  103:}
+        -:  104:
+        3:  105:int bit_array::firstclear(unsigned int place)
+        -:  106:{
+        -:  107:    //first byte to search
+        3:  108:    size_type byteplace = place / NBITS;
+        3:  109:    size_type shift = place % NBITS;
+        -:  110:
+        -:  111:    //prepare the first byte
+        3:  112:    data_type start_byte = _data[byteplace];
+        3:  113:    start_byte |= (0xFFFFFFFF << shift) >> shift; 
+        -:  114:
+        -:  115:    //check the first byte
+        3:  116:    size_type idx = ffs(~start_byte);
+        3:  117:    if (idx)
+    #####:  118:        return idx - 1 + byteplace * NBITS;
+        -:  119:
+        -:  120:    //if not found search further
+        3:  121:    idx = byteplace + 1;
+        9:  122:    while (idx < nbyte && !(~_data[idx]))
+        6:  123:        idx++;    
+        -:  124:    
+        3:  125:    if (idx == nbyte)
+        1:  126:        return -1;                                          
+        -:  127:    else
+        -:  128:    {     
+        2:  129:        return ffs(~_data[idx]) - 1 + idx * NBITS;        
+        -:  130:    }
+        -:  131:} 
+        -:  132:
+        2:  133:int bit_array::resize(size_type size)
+        -:  134:{
+       5*:  135:    data_type* newptr = new data_type[size]{};
+        2:  136:    size_type idx = 0;
+        -:  137:
+        2:  138:    if (size == 0){
+        1:  139:        delete[] _data;
+        1:  140:        _data = nullptr;
+        1:  141:        _size = nbyte = 0;
+        1:  142:        return 0;
+        -:  143:    }
+        -:  144:
+        4:  145:    while (idx < nbyte && idx < size){
+        3:  146:        newptr[idx] = _data[idx];
+        3:  147:        idx++;
+        -:  148:    }
+        -:  149:
+        1:  150:    _size = size * NBITS;
+        1:  151:    nbyte = size;
+        -:  152:
+        1:  153:    data_type* delete_ptr = _data;
+        1:  154:    _data = newptr;
+        1:  155:    delete[] delete_ptr;
+        -:  156:
+        1:  157:    return 0;
+        -:  158:}
+        -:  159:
+        2:  160:biterator bit_array::begin()
+        -:  161:{
+        2:  162:    biterator newiter(this, 0);
+        2:  163:    return newiter;
+        -:  164:}
+        -:  165:
+      161:  166:biterator bit_array::end()
+        -:  167:{
+      161:  168:    biterator newiter(this, _size);
+      161:  169:    return newiter;
+        -:  170:}
+        -:  171:
+      160:  172:void biterator::set(bool val)
+        -:  173:{
+      160:  174:    return bitarr->set(current, val);
+        -:  175:}
+        -:  176:
+        1:  177:bool biterator::check() const
+        -:  178:{
+        1:  179:    return bitarr->check(current);
+        -:  180:}
+        -:  181:
+      160:  182:biterator& biterator::operator++()
+        -:  183:{
+      160:  184:    current++;
+      160:  185:    return *this;
+        -:  186:}
+        -:  187:
+      162:  188:bool biterator::operator!=(const biterator& other) const
+        -:  189:{
+      162:  190:    if (this->bitarr == other.bitarr)
+      161:  191:        return this->current != other.current;
+        -:  192:    else
+        1:  193:        return true;
+        -:  194:}  

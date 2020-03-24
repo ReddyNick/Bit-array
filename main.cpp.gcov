@@ -1,0 +1,56 @@
+        -:    0:Source:main.cpp
+        -:    1:#include <bitarray.h>
+        -:    2:#include <iostream>
+        -:    3:#include <vector>
+        -:    4:
+        3:    5:int main()
+        -:    6:{
+        -:    7:    try{
+        4:    8:        bit_array a(5);
+        2:    9:        bit_array b;
+        1:   10:        std::cout << a.firstset(0) << std::endl;
+        -:   11:
+        1:   12:        a.set(51, 1);
+        1:   13:        a.set(102, 1);
+        -:   14:
+        1:   15:        std::cout << a.check(10) << std::endl;
+        1:   16:        std::cout << a.check(102) << std::endl;
+        -:   17:
+        1:   18:        std::cout << "firstset(32) " << a.firstset(32) << std::endl;
+        1:   19:        std::cout << "firstset(52) " << a.firstset(52) << std::endl;
+        1:   20:        std::cout << a.firstclear(0) << std::endl; 
+        -:   21:
+        1:   22:        bit_array::iterator it = a.begin();
+        -:   23:
+        1:   24:        if (it != b.begin())
+        -:   25:        {
+        1:   26:            printf("a_iter != b_iter\n");
+        -:   27:        }
+        -:   28:
+        1:   29:        it.check();
+        -:   30:
+      161:   31:        while (it != a.end()){
+      160:   32:            it.set(1);
+      160:   33:            ++it;
+        -:   34:        }
+        -:   35:
+        1:   36:        std::cout << a.firstclear(0) << std::endl; 
+        1:   37:        a.set(112, 0);
+        1:   38:        std::cout << a.firstclear(0) << std::endl; 
+        -:   39:
+        -:   40:
+        1:   41:        a.resize(3);
+        1:   42:        std::cout << a.check(51) << std::endl;
+        1:   43:        std::cout << a.size() << std::endl;
+        -:   44:
+        1:   45:        a.resize(0);
+        1:   46:        std::cout << a.size() << std::endl;
+        -:   47:    }
+        -:   48:    
+        2:   49:    catch(std::bad_alloc& exc){
+        2:   50:        std::cout << "bad_alloc\n";
+        2:   51:        return -1;
+        -:   52:    }
+        -:   53:    
+        1:   54:    return 0;
+        -:   55:}
